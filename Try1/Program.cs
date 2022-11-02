@@ -31,6 +31,10 @@ while (true)
             {
                 SendUserIdsToAdmin(updates[i].Message);
             }
+            if (updates[i].Message.Text == "GETADMINS")
+            {
+                SendAdminIdsToAdmin(updates[i].Message);
+            }
             if (updates[i].Message.Text.Contains("everyone"))
             {
                 updates[i].Message.Text = updates[i].Message.Text.Remove(0, 8);
@@ -39,6 +43,11 @@ while (true)
             if (updates[i].Message.Text.Contains("personal"))
             {
                 SendToUser(updates[i]);
+            }
+            if (updates[i].Message.Text.Contains("MAKE_ADMIN"))
+            {
+                updates[i].Message.Text = updates[i].Message.Text.Remove(0, 10);
+                AddAdmin(updates[i].Message.Text);
             }
         }
         updates = await botClient.GetUpdatesAsync(updates[^1].Id + 1);
@@ -69,6 +78,13 @@ async Task SendUserIdsToAdmin(Message message)
     }
 }
 
+async Task SendAdminIdsToAdmin(Message message)
+{
+    for (int i = 0; i < userIds.Count; i++)
+    {
+        await botClient.SendTextMessageAsync(new ChatId(message.From.Id), adminIds[i].ToString());
+    }
+}
 
 void SetAdmin(string message, long userId)
 {
@@ -81,10 +97,13 @@ void SetAdmin(string message, long userId)
     }
 }
 
-// void AddAdmin()
-// {
-//     adminIds.Add(userId);
-// }
+void AddAdmin(Message mess)
+{
+    if (userIds.Contains(mess))
+    {
+        adminIds.Add(mess);
+    }
+}
 
 void AddUser(long userId)
 {
