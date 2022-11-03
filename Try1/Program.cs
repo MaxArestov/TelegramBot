@@ -47,7 +47,7 @@ while (true)
             if (updates[i].Message.Text.Contains("MAKE_ADMIN"))
             {
                 updates[i].Message.Text = updates[i].Message.Text.Remove(0, 10);
-                AddAdmin(updates[i].Message.Text);
+                AddAdmin(updates[i].Message);
             }
         }
         updates = await botClient.GetUpdatesAsync(updates[^1].Id + 1);
@@ -99,9 +99,15 @@ void SetAdmin(string message, long userId)
 
 void AddAdmin(Message mess)
 {
-    if (userIds.Contains(mess))
+    string newIdToAdmin = mess.Text;
+    long messlong = 0;
+    bool isParsedLong = long.TryParse(newIdToAdmin, out messlong);
+    if (isParsedLong)
     {
-        adminIds.Add(mess);
+        if (userIds.Contains(messlong))
+        {
+            adminIds.Add(messlong);
+        }
     }
 }
 
