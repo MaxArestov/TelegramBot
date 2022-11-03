@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 #nullable disable
-var botClient = new TelegramBotClient("");
+var botClient = new TelegramBotClient("***");
 User bot = botClient.GetMeAsync().Result;
 
 List<long> userIds = new List<long>();
