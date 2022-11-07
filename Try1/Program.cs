@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 #nullable disable
-var botClient = new TelegramBotClient("5731536747:AAFNBanq8ECXbR5Zer6arJh-F6FkPvNsiFw");
+var botClient = new TelegramBotClient("");
 User bot = botClient.GetMeAsync().Result;
 
 string pathSecretKey = "D:/Program/For teacher/TelegramBot/Try1/secretKey.txt";
