@@ -1,0 +1,14 @@
+string pathSecretKey = "secretKey.txt";
+string text = "Hello World\nHello METANIT.COM";
+ 
+// полная перезапись файла 
+using (StreamWriter writer = new StreamWriter(path, false))
+{
+    await writer.WriteLineAsync(text);
+}
+// добавление в файл
+using (StreamWriter writer = new StreamWriter(path, true))
+{
+    await writer.WriteLineAsync("Addition");
+    await writer.WriteAsync("4,5");
+}

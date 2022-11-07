@@ -1,12 +1,16 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 #nullable disable
-var botClient = new TelegramBotClient("***");
+var botClient = new TelegramBotClient("5731536747:AAFNBanq8ECXbR5Zer6arJh-F6FkPvNsiFw");
 User bot = botClient.GetMeAsync().Result;
 
+string pathSecretKey = "D:/Program/For teacher/TelegramBot/Try1/secretKey.txt";
+string pathUserIds = "D:/Program/For teacher/TelegramBot/Try1/UserIds.txt";
 List<long> userIds = new List<long>();
+using StreamReader readerSecretKey = new StreamReader(pathSecretKey);
+string secretKey = readerSecretKey.ReadLine();
+readerSecretKey.Close();
 
-string secretKey = "123321";
 
 List<long> adminIds = new List<long>();
 
@@ -16,6 +20,7 @@ while (true)
     Update[] updates = await botClient.GetUpdatesAsync();
     for (int i = 0; i < updates.Length; i++)
     {
+        GetUserByID(updates[i].Message.From.Id);
         AddUser(updates[i].Message.From.Id);
 
         SetAdmin(updates[i].Message.Text, updates[i].Message.From.Id);
@@ -24,8 +29,13 @@ while (true)
         {
             if (updates[i].Message.Text.Contains("CHANGE_PASSWORD"))
             {
-                secretKey = updates[i].Message.Text.Remove(0, 15);
+                secretKey = updates[i].Message.Text.Remove(0, 16);
                 SendMessageToAdminChangePassword(updates[i].Message);
+                using (StreamWriter writerSecretKey = new StreamWriter(pathSecretKey, false)) // полная перезапись файла
+                {
+                    writerSecretKey.Write($"{secretKey}");
+                    writerSecretKey.Close();
+                }
             }
             if (updates[i].Message.Text == "GET")
             {
@@ -88,12 +98,9 @@ async Task SendAdminIdsToAdmin(Message message)
 
 void SetAdmin(string message, long userId)
 {
-    if (!adminIds.Contains(userId))
+    if (!adminIds.Contains(userId) && message == secretKey)
     {
-        if (message == secretKey)
-        {
-            adminIds.Add(userId);
-        }
+        adminIds.Add(userId);
     }
 }
 
@@ -110,12 +117,35 @@ void AddAdmin(Message mess)
         }
     }
 }
-
-void AddUser(long userId)
+void GetUserByID(long userId)
 {
-    if (!userIds.Contains(userId))
+    using (StreamReader readerNewId = new StreamReader(pathUserIds, System.Text.Encoding.Default))
     {
-        userIds.Add(userId);
+        string lineNewIds;
+        while ((lineNewIds = readerNewId.ReadLine()) != null)
+        {
+            if (!readerNewId.ReadToEnd().Contains(lineNewIds))
+            {
+                using (StreamWriter writerNewId = new StreamWriter(pathUserIds, true))
+                {
+                    writerNewId.WriteLine(Convert.ToString(userId));
+                }
+            }
+        }
+    }
+}
+void AddUser()
+{
+    using (StreamReader readerUserIds = new StreamReader(pathUserIds, System.Text.Encoding.Default))
+    {
+        string lineUserIds;
+        while ((lineUserIds = readerUserIds.ReadLine()) != null)
+        {
+            if (!userIds.Contains(long.Parse(lineUserIds)))
+            {
+                userIds.Add(long.Parse(lineUserIds));
+            }
+        }
     }
 }
 
