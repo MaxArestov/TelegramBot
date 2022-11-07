@@ -12,6 +12,7 @@ string secretKey = readerSecretKey.ReadLine();
 readerSecretKey.Close();
 
 
+
 List<long> adminIds = new List<long>();
 
 Random random = new Random();
@@ -21,7 +22,7 @@ while (true)
     for (int i = 0; i < updates.Length; i++)
     {
         GetUserByID(updates[i].Message.From.Id);
-        AddUser(updates[i].Message.From.Id);
+        AddUser();
 
         SetAdmin(updates[i].Message.Text, updates[i].Message.From.Id);
 
@@ -117,22 +118,22 @@ void AddAdmin(Message mess)
         }
     }
 }
-void GetUserByID(long userId)
+void GetUserByID(long newId)
 {
     using (StreamReader readerNewId = new StreamReader(pathUserIds, System.Text.Encoding.Default))
     {
-        string lineNewIds;
-        while ((lineNewIds = readerNewId.ReadLine()) != null)
+        if (!readerNewId.ReadToEnd().Contains(Convert.ToString(newId)))
         {
-            if (!readerNewId.ReadToEnd().Contains(lineNewIds))
-            {
-                using (StreamWriter writerNewId = new StreamWriter(pathUserIds, true))
-                {
-                    writerNewId.WriteLine(Convert.ToString(userId));
-                }
-            }
+            readerNewId.Close();
+            AddUserToTxt(newId);
         }
     }
+}
+void AddUserToTxt(long newUserId)
+{
+    using StreamWriter writerNewId = new StreamWriter(pathUserIds, true);
+    writerNewId.WriteLine($"{newUserId}");
+    writerNewId.Close();
 }
 void AddUser()
 {
@@ -148,7 +149,6 @@ void AddUser()
         }
     }
 }
-
 
 async Task SendMessageToEveryone(Message message)
 {
