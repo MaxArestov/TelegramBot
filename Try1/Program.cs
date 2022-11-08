@@ -9,7 +9,7 @@ string pathUserIds = "D:/Program/For teacher/TelegramBot/Try1/UserIds.txt";
 string pathAdminIds = "D:/Program/For teacher/TelegramBot/Try1/AdminIds.txt";
 List<long> userIds = new List<long>();
 using StreamReader readerSecretKey = new StreamReader(pathSecretKey);
-string secretKey = readerSecretKey.ReadLine();
+string secretKey = readerSecretKey.ReadToEnd();
 readerSecretKey.Close();
 
 
@@ -31,8 +31,8 @@ while (true)
             SetAdmin(updates[i].Message.From.Id);
         }
 
-
-        if (adminIds.Contains(updates[i].Message.From.Id))
+        using StreamReader readerIdsOfAdmins = new StreamReader(pathAdminIds, System.Text.Encoding.Default);
+        if (readerIdsOfAdmins.ReadToEnd().Contains(Convert.ToString(updates[i].Message.From.Id)))
         {
             if (updates[i].Message.Text.Contains("CHANGE_PASSWORD"))
             {
@@ -40,7 +40,7 @@ while (true)
                 SendMessageToAdminChangePassword(updates[i].Message);
                 using (StreamWriter writerSecretKey = new StreamWriter(pathSecretKey, false)) // полная перезапись файла
                 {
-                    writerSecretKey.Write($"{secretKey}");
+                    writerSecretKey.Write(secretKey.ToString());
                     writerSecretKey.Close();
                 }
             }
@@ -54,7 +54,7 @@ while (true)
             }
             if (updates[i].Message.Text.Contains("everyone"))
             {
-                updates[i].Message.Text = updates[i].Message.Text.Remove(0, 8);
+                updates[i].Message.Text = updates[i].Message.Text.Remove(0, 9);
                 SendMessageToEveryone(updates[i].Message);
             }
             if (updates[i].Message.Text.Contains("personal"))
@@ -63,7 +63,7 @@ while (true)
             }
             if (updates[i].Message.Text.Contains("MAKE_ADMIN"))
             {
-                updates[i].Message.Text = updates[i].Message.Text.Remove(0, 10);
+                updates[i].Message.Text = updates[i].Message.Text.Remove(0, 11);
                 AddAdmin(updates[i].Message);
             }
         }
@@ -89,24 +89,25 @@ async Task SendToUser(Update update)
 
 async Task SendUserIdsToAdmin(Message message)
 {
-    for (int i = 0; i < userIds.Count; i++)
+    using (StreamReader readerUserIdsFromTxt = new StreamReader(pathUserIds, System.Text.Encoding.Default))
     {
-        using (StreamReader readerUserIdsFromTxt = new StreamReader(pathUserIds, System.Text.Encoding.Default))
+        string? lineUserIdsTxt;
+        while ((lineUserIdsTxt = readerUserIdsFromTxt.ReadLine()) != null)
         {
-            string? lineUserIdsTxt;
-            while ((lineUserIdsTxt = readerUserIdsFromTxt.ReadLine()) != null)
-            {
-                await botClient.SendTextMessageAsync(new ChatId(message.From.Id), userIds[i].ToString());
-            }
+            await botClient.SendTextMessageAsync(new ChatId(message.From.Id), lineUserIdsTxt);
         }
     }
 }
 
 async Task SendAdminIdsToAdmin(Message message)
 {
-    for (int i = 0; i < userIds.Count; i++)
+    using (StreamReader readerAdminIdsFromTxt = new StreamReader(pathAdminIds, System.Text.Encoding.Default))
     {
-        await botClient.SendTextMessageAsync(new ChatId(message.From.Id), adminIds[i].ToString());
+        string? lineAdminIdsTxt;
+        while ((lineAdminIdsTxt = readerAdminIdsFromTxt.ReadLine()) != null)
+        {
+            await botClient.SendTextMessageAsync(new ChatId(message.From.Id), lineAdminIdsTxt);
+        }
     }
 }
 
