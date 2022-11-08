@@ -185,9 +185,6 @@ async Task SendMessageToEveryone(Message message)
 }
 async Task SendMessageToAdminChangePassword(Message mes)
 {
-    for (int i = 0; i < adminIds.Count; i++)
-    {
-        await botClient.SendTextMessageAsync(new ChatId(mes.From.Id), "Пароль успешно изменен.");
-        await botClient.SendTextMessageAsync(new ChatId(mes.From.Id), $"Новый пароль - {secretKey}");
-    }
+    await botClient.SendTextMessageAsync(new ChatId(mes.From.Id), "Пароль успешно изменен.");
+    await botClient.SendTextMessageAsync(new ChatId(mes.From.Id), $"Новый пароль - {secretKey}");
 }
