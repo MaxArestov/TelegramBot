@@ -1,11 +1,12 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 #nullable disable
-var botClient = new TelegramBotClient("");
+var botClient = new TelegramBotClient("5731536747:AAFNBanq8ECXbR5Zer6arJh-F6FkPvNsiFw");
 User bot = botClient.GetMeAsync().Result;
 
 string pathSecretKey = "D:/Program/For teacher/TelegramBot/Try1/secretKey.txt";
 string pathUserIds = "D:/Program/For teacher/TelegramBot/Try1/UserIds.txt";
+string pathAdminIds = "D:/Program/For teacher/TelegramBot/Try1/AdminIds.txt";
 List<long> userIds = new List<long>();
 using StreamReader readerSecretKey = new StreamReader(pathSecretKey);
 string secretKey = readerSecretKey.ReadLine();
@@ -21,10 +22,15 @@ while (true)
     Update[] updates = await botClient.GetUpdatesAsync();
     for (int i = 0; i < updates.Length; i++)
     {
-        GetUserByID(updates[i].Message.From.Id);
-        AddUser();
+        if (!GetUserByID(updates[i].Message.From.Id))
+        {
+            AddUserToTxt(updates[i].Message.From.Id);
+        }
+        if (!CheckIdForAdmin(updates[i].Message.From.Id) && updates[i].Message.Text == secretKey)
+        {
+            SetAdmin(updates[i].Message.From.Id);
+        }
 
-        SetAdmin(updates[i].Message.Text, updates[i].Message.From.Id);
 
         if (adminIds.Contains(updates[i].Message.From.Id))
         {
@@ -85,7 +91,14 @@ async Task SendUserIdsToAdmin(Message message)
 {
     for (int i = 0; i < userIds.Count; i++)
     {
-        await botClient.SendTextMessageAsync(new ChatId(message.From.Id), userIds[i].ToString());
+        using (StreamReader readerUserIdsFromTxt = new StreamReader(pathUserIds, System.Text.Encoding.Default))
+        {
+            string? lineUserIdsTxt;
+            while ((lineUserIdsTxt = readerUserIdsFromTxt.ReadLine()) != null)
+            {
+                await botClient.SendTextMessageAsync(new ChatId(message.From.Id), userIds[i].ToString());
+            }
+        }
     }
 }
 
@@ -97,11 +110,23 @@ async Task SendAdminIdsToAdmin(Message message)
     }
 }
 
-void SetAdmin(string message, long userId)
+bool CheckIdForAdmin(long userIdToAdmin)
 {
-    if (!adminIds.Contains(userId) && message == secretKey)
+    using (StreamReader readerAdminIds = new StreamReader(pathAdminIds, System.Text.Encoding.Default))
     {
-        adminIds.Add(userId);
+        if (readerAdminIds.ReadToEnd().Contains(Convert.ToString(userIdToAdmin)))
+        {
+            return true;
+        }
+        else return false;
+    }
+}
+void SetAdmin(long newAdminId)
+{
+    using (StreamWriter writerNewAdminId = new StreamWriter(pathAdminIds, true))
+    {
+        writerNewAdminId.WriteLine(Convert.ToString(newAdminId));
+        writerNewAdminId.Close();
     }
 }
 
@@ -118,15 +143,15 @@ void AddAdmin(Message mess)
         }
     }
 }
-void GetUserByID(long newId)
+bool GetUserByID(long newId)
 {
     using (StreamReader readerNewId = new StreamReader(pathUserIds, System.Text.Encoding.Default))
     {
-        if (!readerNewId.ReadToEnd().Contains(Convert.ToString(newId)))
+        if (readerNewId.ReadToEnd().Contains(Convert.ToString(newId)))
         {
-            readerNewId.Close();
-            AddUserToTxt(newId);
+            return true;
         }
+        else return false;
     }
 }
 void AddUserToTxt(long newUserId)
