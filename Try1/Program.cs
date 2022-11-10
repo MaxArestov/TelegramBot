@@ -7,11 +7,11 @@ User bot = botClient.GetMeAsync().Result;
 string pathSecretKey = "D:/Program/For teacher/TelegramBot/Try1/secretKey.txt";
 string pathUserIds = "D:/Program/For teacher/TelegramBot/Try1/UserIds.txt";
 string pathAdminIds = "D:/Program/For teacher/TelegramBot/Try1/AdminIds.txt";
+string pathLogs = "D:/Program/For teacher/TelegramBot/Try1/Logs.txt";
 List<long> userIds = new List<long>();
 using StreamReader readerSecretKey = new StreamReader(pathSecretKey);
 string secretKey = readerSecretKey.ReadToEnd();
 readerSecretKey.Close();
-
 
 
 List<long> adminIds = new List<long>();
@@ -22,6 +22,11 @@ while (true)
     Update[] updates = await botClient.GetUpdatesAsync();
     for (int i = 0; i < updates.Length; i++)
     {
+        using (StreamWriter writerLogs = new StreamWriter(pathLogs, true))
+        {
+            writerLogs.WriteLine($"{updates[i].Message.From.Id} ({updates[i].Message.From.FirstName} {updates[i].Message.From.LastName}): {updates[i].Message.Text}");
+        }
+        Console.WriteLine($"{updates[i].Message.From.Id} {updates[i].Message.From.FirstName} {updates[i].Message.From.LastName}: {updates[i].Message.Text}");
         if (!GetUserByID(updates[i].Message.From.Id))
         {
             AddUserToTxt(updates[i].Message.From.Id);
@@ -53,7 +58,7 @@ while (true)
             {
                 SendAdminIdsToAdmin(updates[i].Message);
             }
-            if (updates[i].Message.Text.Contains("everyone"))
+            if (updates[i].Message.Text.Contains("everyone") && updates[i].Message.Text.Length > 9)
             {
                 updates[i].Message.Text = updates[i].Message.Text.Remove(0, 9);
                 SendMessageToEveryone(updates[i].Message);
