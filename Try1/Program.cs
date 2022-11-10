@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 #nullable disable
-var botClient = new TelegramBotClient("5731536747:AAFNBanq8ECXbR5Zer6arJh-F6FkPvNsiFw");
+var botClient = new TelegramBotClient("");
 User bot = botClient.GetMeAsync().Result;
 
 string pathSecretKey = "D:/Program/For teacher/TelegramBot/Try1/secretKey.txt";
@@ -34,6 +34,7 @@ while (true)
         using StreamReader readerIdsOfAdmins = new StreamReader(pathAdminIds, System.Text.Encoding.Default);
         if (readerIdsOfAdmins.ReadToEnd().Contains(Convert.ToString(updates[i].Message.From.Id)))
         {
+            readerIdsOfAdmins.Close();
             if (updates[i].Message.Text.Contains("CHANGE_PASSWORD"))
             {
                 secretKey = updates[i].Message.Text.Remove(0, 16);
@@ -64,7 +65,10 @@ while (true)
             if (updates[i].Message.Text.Contains("MAKE_ADMIN"))
             {
                 updates[i].Message.Text = updates[i].Message.Text.Remove(0, 11);
-                AddAdmin(updates[i].Message);
+                if (!CheckIdForAdminAdd(updates[i].Message.Text))
+                {
+                    AddAdmin(updates[i].Message.Text);
+                }
             }
         }
         updates = await botClient.GetUpdatesAsync(updates[^1].Id + 1);
@@ -108,6 +112,7 @@ async Task SendAdminIdsToAdmin(Message message)
         {
             await botClient.SendTextMessageAsync(new ChatId(message.From.Id), lineAdminIdsTxt);
         }
+        readerAdminIdsFromTxt.Close();
     }
 }
 
@@ -117,6 +122,7 @@ bool CheckIdForAdmin(long userIdToAdmin)
     {
         if (readerAdminIds.ReadToEnd().Contains(Convert.ToString(userIdToAdmin)))
         {
+            readerAdminIds.Close();
             return true;
         }
         else return false;
@@ -130,19 +136,25 @@ void SetAdmin(long newAdminId)
         writerNewAdminId.Close();
     }
 }
-
-void AddAdmin(Message mess)
+bool CheckIdForAdminAdd(string messageNewAdminId)
 {
-    string newIdToAdmin = mess.Text;
-    long messlong = 0;
-    bool isParsedLong = long.TryParse(newIdToAdmin, out messlong);
-    if (isParsedLong)
+    using StreamReader readerAdminIdsCheck = new StreamReader(pathAdminIds, System.Text.Encoding.Default);
+    if (readerAdminIdsCheck.ReadToEnd().Contains(Convert.ToString(messageNewAdminId)))
     {
-        if (userIds.Contains(messlong))
-        {
-            adminIds.Add(messlong);
-        }
+        readerAdminIdsCheck.Close();
+        return true;
     }
+    else
+    {
+        readerAdminIdsCheck.Close();
+        return false;
+    }
+}
+void AddAdmin(string mess)
+{
+    using StreamWriter writerAdminIdsAdd = new StreamWriter(pathAdminIds, true);
+    writerAdminIdsAdd.WriteLine(mess);
+    writerAdminIdsAdd.Close();
 }
 bool GetUserByID(long newId)
 {
@@ -150,6 +162,7 @@ bool GetUserByID(long newId)
     {
         if (readerNewId.ReadToEnd().Contains(Convert.ToString(newId)))
         {
+            readerNewId.Close();
             return true;
         }
         else return false;
@@ -161,26 +174,16 @@ void AddUserToTxt(long newUserId)
     writerNewId.WriteLine($"{newUserId}");
     writerNewId.Close();
 }
-void AddUser()
-{
-    using (StreamReader readerUserIds = new StreamReader(pathUserIds, System.Text.Encoding.Default))
-    {
-        string lineUserIds;
-        while ((lineUserIds = readerUserIds.ReadLine()) != null)
-        {
-            if (!userIds.Contains(long.Parse(lineUserIds)))
-            {
-                userIds.Add(long.Parse(lineUserIds));
-            }
-        }
-    }
-}
 
 async Task SendMessageToEveryone(Message message)
 {
-    for (int i = 0; i < userIds.Count; i++)
+    using (StreamReader readerLinesOfUserIds = new StreamReader(pathUserIds))
     {
-        await botClient.SendTextMessageAsync(new ChatId(userIds[i]), message.Text);
+        string? lineuserIdsForMessage;
+        while ((lineuserIdsForMessage = readerLinesOfUserIds.ReadLine()) != null)
+        {
+            await botClient.SendTextMessageAsync(new ChatId(lineuserIdsForMessage), message.Text);
+        }
     }
 }
 async Task SendMessageToAdminChangePassword(Message mes)
